@@ -25,14 +25,7 @@ async function init() {
 
   const sel = $("countrySel");
   for (const c of META.countries) sel.append(new Option(c.name, c.slug));
-  sel.onchange = async () => {
-    const c = META.countries.find(x => x.slug === sel.value);
-    if (!c) return;
-    mapApi.clearArea();
-    mapApi.fit(c.bbox);
-    const s = await countrySeries(c.slug);
-    show(s, c.name, `Country total · ${fmt(c.total)} harmonized fire cell-days since 2000`);
-  };
+  sel.onchange = () => openCountry(sel.value, null, mapApi);
 
   for (const st of STORIES) {
     const b = Object.assign(document.createElement("button"), { className: "chip-btn", textContent: st.label });
@@ -61,6 +54,85 @@ async function init() {
     URL.revokeObjectURL(a.href);
   };
   renderValidation();
+  renderFindings(mapApi);
+}
+
+async function openCountry(slug, month, mapApi) {
+  const c = META.countries.find(x => x.slug === slug);
+  if (!c) return;
+  $("countrySel").value = slug;
+  mapApi.clearArea();
+  mapApi.fit(c.bbox);
+  const s = await countrySeries(c.slug);
+  show(s, c.name, `Country total · ${fmt(c.total)} harmonized fire cell-days since 2000`, month);
+}
+
+// ── findings: global trend (raw vs harmonized vs Aqua alone) + automatically detected record months
+async function renderFindings(mapApi) {
+  const F = await fetch("data/findings.json").then(r => (r.ok ? r.json() : null)).catch(() => null);
+  if (!F) return;
+  const t = F.trend, f1 = d3.format(".1f");
+  $("trendStats").innerHTML =
+    `<div style="--c:#b9b2a8"><b>×${f1(t.raw_2012_2022 / 100)}</b><span>raw hotspots, 2012–2022 vs 2003–2011. Peak ×${f1(t.raw_peak / 100)} in ${t.raw_peak_year}.</span></div>` +
+    `<div style="--c:#ff8a3d"><b>${f1(t.harm_2012_2022 - 100)}%</b><span>ALAZ Relay, harmonized: the same years in one consistent unit</span></div>` +
+    `<div style="--c:#8ec5ff"><b>${f1(t.aqua_2012_2022 - 100)}%</b><span>Aqua MODIS alone, never harmonized: an independent check</span></div>`;
+  drawTrend(t);
+  let rz; addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() => drawTrend(t), 200); });
+  $("recCount").textContent = F.records_strict;
+  const grid = $("recGrid");
+  for (const r of F.showcase) {
+    const b = document.createElement("button");
+    b.className = "rec reveal in";
+    b.type = "button";
+    b.innerHTML = `<div class="when">${r.label}</div><div class="where">${r.country}</div>
+      <div class="x">×${r.x_typical}<small>a typical ${r.label.slice(0, 3)}</small></div>
+      <div class="ev">${r.event ?? ""}</div>
+      <span class="tag ${r.strict ? "strict" : ""}">${r.strict ? "record, beyond uncertainty" : "highest since 2001 · within uncertainty"}</span>`;
+    b.setAttribute("aria-label", `${r.country}, ${r.label}: ${r.x_typical} times a typical month. Open its calendar.`);
+    b.onclick = async () => {
+      await openCountry(r.slug, (r.year - 2000) * 12 + r.month - 1, mapApi);
+      $("explore").scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+    };
+    grid.append(b);
+  }
+  $("goManavgat").onclick = () => {
+    $("explore").scrollIntoView({ behavior: "smooth" });
+    selectArea({ ring: STORIES[0].ring, name: STORIES[0].name, month: STORIES[0].month }, mapApi);
+  };
+}
+
+function drawTrend(t) {
+  const el = $("trend");
+  const W = Math.max(320, el.clientWidth || 1000), compact = W < 640;
+  const m = { l: compact ? 34 : 44, r: compact ? 8 : 150, t: compact ? 62 : 16, b: 26 }, H = compact ? 300 : 340;
+  const x = d3.scaleLinear().domain([2003, 2025]).range([m.l, W - m.r]);
+  const y = d3.scaleLinear().domain([0, 950]).range([H - m.b, m.t]);
+  el.innerHTML = "";
+  const svg = d3.select(el).append("svg").attr("viewBox", `0 0 ${W} ${H}`).attr("role", "img")
+    .attr("aria-label", `Raw hotspot totals rise to ${Math.round(t.raw_peak / 100)} times the 2003–2011 level while harmonized activity and Aqua alone fall about 11 percent`);
+  [0, 100, 300, 500, 700, 900].forEach(v => {
+    svg.append("line").attr("x1", m.l).attr("x2", W - m.r).attr("y1", y(v)).attr("y2", y(v))
+      .attr("stroke", v === 100 ? "rgba(255,255,255,.22)" : "rgba(255,255,255,.06)").attr("stroke-dasharray", v === 100 ? "2 3" : null);
+    svg.append("text").attr("x", m.l - 6).attr("y", y(v) + 4).attr("text-anchor", "end").text(v);
+  });
+  [[2012, "Suomi NPP joins"], [2018.3, "NOAA-20 joins"]].forEach(([yr, lab]) => {
+    svg.append("line").attr("x1", x(yr)).attr("x2", x(yr)).attr("y1", m.t).attr("y2", H - m.b).attr("stroke", "rgba(196,166,255,.35)").attr("stroke-dasharray", "3 4");
+    svg.append("text").attr("x", x(yr) + 6).attr("y", m.t + 10).style("fill", "#c4a6ff").text(compact ? lab.split(" ")[0] : lab);
+  });
+  const ln = k => d3.line().x((v, i) => x(t.years[i])).y(v => y(v)).curve(d3.curveMonotoneX)(t[k]);
+  const S = [{ k: "raw", c: "#b9b2a8", w: 2, lab: "Raw hotspots", dash: "5 4" },
+             { k: "aqua", c: "#8ec5ff", w: 1.8, lab: "Aqua MODIS alone" },
+             { k: "harm", c: "#ff8a3d", w: 3, lab: "ALAZ Relay" }];
+  for (const s of S) {
+    svg.append("path").attr("d", ln(s.k)).attr("fill", "none").attr("stroke", s.c).attr("stroke-width", s.w).attr("stroke-dasharray", s.dash ?? null);
+    const last = t[s.k][t[s.k].length - 1];
+    const yy = s.k === "harm" ? y(last) + 16 : s.k === "aqua" ? y(last) - 8 : y(last) + 4;
+    if (!compact) svg.append("text").attr("class", "lbl").attr("x", W - m.r + 10).attr("y", yy).style("fill", s.c).text(`${s.lab} ${Math.round(last)}`);
+  }
+  if (compact) S.forEach((s, i) => svg.append("text").attr("class", "lbl").attr("x", 0).attr("y", 12 + i * 15).style("fill", s.c).text(s.lab));
+  svg.append("g").attr("transform", `translate(0,${H - m.b + 6})`)
+    .call(d3.axisBottom(x).tickValues(d3.range(2003, 2026, compact ? 4 : 2)).tickFormat(d3.format("d")).tickSize(0))
+    .call(g => g.select(".domain").remove());
 }
 
 async function selectArea(area, mapApi) {

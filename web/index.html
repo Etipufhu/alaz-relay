@@ -30,6 +30,7 @@
     <a href="#proof">The problem</a>
     <a href="#relay">The relay</a>
     <a href="#explore">Explorer</a>
+    <a href="#findings">Findings</a>
     <a href="#method">Method</a>
   </nav>
   <a class="pill pill-glow navcta" href="#explore">Open the calendar</a>
@@ -220,9 +221,35 @@
 </section>
 
 <!-- ───────────────────────────── METHOD / FOOTER ───────────────────────────── -->
+<section class="sect findings" id="findings">
+  <div class="wrap">
+    <p class="kicker reveal">04 — What the record reveals</p>
+    <h2 class="h2 reveal">Fire maps say Earth burns <i>six times more.</i><br>It burns about a tenth less.</h2>
+    <p class="body reveal">Add up every hotspot the way most fire maps do and global fire seems to explode in 2012, then again in 2018. Those are the years Suomi NPP and NOAA-20 joined. In one consistent unit the trend reverses. Aqua MODIS on its own, never harmonized, agrees.</p>
+
+    <figure class="trendfig reveal" aria-labelledby="trendTitle">
+      <div class="trend-stats" id="trendStats"></div>
+      <div id="trend" class="trend-chart"></div>
+      <figcaption class="fine" id="trendTitle">Yearly global fire activity, indexed to 2003–2011 = 100. Raw: all MODIS and VIIRS hotspot pixels (vegetation fires, confidence not low). ALAZ Relay: harmonized fire cell-days. Aqua MODIS alone: the same unit from Aqua only. It is an independent check, but its orbit drifts after 2021. The decline is consistent with published evidence that global burned area is falling, mostly in savannas (Andela et al., 2017, <i>Science</i>).</figcaption>
+    </figure>
+
+    <div class="found-head reveal">
+      <h3>It finds the disasters on its own.</h3>
+      <p>We gave the detector no news, only the record. For every country and calendar month since 2012 it asks one question: is this month above every other year since 2001, even at the low end of its uncertainty? <b id="recCount">45</b> months pass that test. Here are some, with the events they turned out to be. Click one to open its calendar.</p>
+    </div>
+    <div class="recgrid" id="recGrid"></div>
+
+    <aside class="areanote reveal">
+      <p class="kicker">Why you draw areas</p>
+      <p>At country level, Türkiye's August 2021 ranks only 17th of 25 Augusts, because crop-stubble burning across the southeast hides it. Draw the area around Manavgat and July–August 2021 becomes the record by a wide margin. A national total can hide the fire that matters, which is why the explorer works on any area you draw.</p>
+      <button class="chip-btn" id="goManavgat" type="button">Show Manavgat in the explorer →</button>
+    </aside>
+  </div>
+</section>
+
 <section class="sect method" id="method">
   <div class="wrap">
-    <p class="kicker reveal">04 — Method, data &amp; limits</p>
+    <p class="kicker reveal">05 — Method, data &amp; limits</p>
     <h2 class="h2 reveal">Open data,<br><i>open about its limits.</i></h2>
     <figure class="handover reveal" aria-labelledby="hoTitle">
       <div class="ho-head">

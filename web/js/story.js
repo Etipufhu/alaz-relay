@@ -32,7 +32,7 @@ const links = [...nav.querySelectorAll(".navlinks a")];
 new IntersectionObserver(entries => {
   for (const e of entries) if (e.isIntersecting) links.forEach(a => a.classList.toggle("on", a.hash === `#${e.target.id}`));
 }, { rootMargin: "-45% 0px -50% 0px" }).observe(document.getElementById("proof"));
-["relay", "explore", "method"].forEach(id => {
+["relay", "explore", "findings", "method"].forEach(id => {
   new IntersectionObserver(entries => {
     for (const e of entries) if (e.isIntersecting) links.forEach(a => a.classList.toggle("on", a.hash === `#${id}`));
   }, { rootMargin: "-45% 0px -50% 0px" }).observe(document.getElementById(id));
