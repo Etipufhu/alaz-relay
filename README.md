@@ -4,8 +4,8 @@
 
 NASA's MODIS (Terra, Aqua) and VIIRS (Suomi NPP, NOAA-20) instruments have recorded active fires since 2000, but VIIRS sees fires about ten times smaller than MODIS. Every time a satellite joins, raw hotspot counts jump even when nothing changed on the ground. ALAZ Relay rebuilds one consistent, global, Aqua-MODIS-equivalent fire record (Nov 2000 – Dec 2025, 0.1° grid, 235 countries). On top of it, a static web app turns any area on Earth into a **burning activity calendar**: seasons, anomalies against the historical median, record months, uncertainty, and CSV download.
 
-- **Live app:** see the repository's GitHub Pages link (About panel)
-- **Demo video (30 s):** [`submission/alaz-relay-demo.mp4`](submission/alaz-relay-demo.mp4)
+- **Live app:** https://etipufhu.github.io/alaz-relay/
+- **Demo video (30 s):** https://etipufhu.github.io/alaz-relay/demo.html
 - **Project write-up:** [`submission/project-page.md`](submission/project-page.md)
 
 ## Method in one paragraph
@@ -33,7 +33,7 @@ pipeline/                       data pipeline (Python 3.11 + DuckDB)
   export_hero.py                landing-page globe data
   demo/record_demo.py           records the 30 s demo from the live app
 web/                            the static web app (deployed by GitHub Actions)
-submission/                     demo video, subtitles and project write-up
+submission/                     project write-up (demo video lives in web/media)
 ```
 
 Reproduce (needs ~60 GB free disk and a FIRMS MAP_KEY in `.env`; the key is only used for data download and never shipped):

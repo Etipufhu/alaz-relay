@@ -22,13 +22,15 @@ This matters because fire trends drive real decisions: firefighting budgets, ins
 
 ## Link to Project Demo
 
-<!-- paste the public YouTube / Google Drive link of submission/alaz-relay-demo.mp4 here -->
+https://etipufhu.github.io/alaz-relay/demo.html
 
 ---
 
 ## Link to Final Project
 
-<!-- paste the public website link here (e.g. GitHub Pages) -->
+https://etipufhu.github.io/alaz-relay/
+
+Source code and full method: https://github.com/Etipufhu/alaz-relay
 
 ---
 

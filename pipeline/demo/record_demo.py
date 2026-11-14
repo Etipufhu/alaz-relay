@@ -5,7 +5,7 @@ http://localhost:8765, overlays English subtitles + an SI-assistance watermark, 
 Chrome DevTools screencast and encodes a 1920x1080 / 30 fps H.264 MP4 (<= 30 s).
 
 Usage:  python pipeline/demo/record_demo.py [--url http://localhost:8765/] [--headless]
-Output: submission/alaz-relay-demo.mp4 (+ submission/alaz-relay-demo.srt, same captions as text)
+Output: web/media/alaz-relay-demo.mp4 (+ .srt with the same captions as text), played by web/demo.html
 """
 import argparse
 import base64
@@ -19,7 +19,7 @@ from PIL import Image
 from playwright.sync_api import sync_playwright
 
 ROOT = Path(__file__).resolve().parents[2]
-OUT = ROOT / "submission"
+OUT = ROOT / "web" / "media"
 W, H, FPS, DUR = 1920, 1080, 30, 30.0
 
 # (start_s, end_s, text) - English subtitles, burned in and also written as .srt

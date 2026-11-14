@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ALAZ Relay · 30-second demo</title>
+<meta name="description" content="30-second demo of ALAZ Relay, Team ALAZ, NASA Space Apps Challenge 2026: harmonized MODIS and VIIRS fire record and burning activity calendar.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Hanken+Grotesk:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root { --bg: #050506; --ink: #f3eee6; --muted: rgba(243,238,230,.64); --line: rgba(255,255,255,.1); --ember: #ff6a1f; --ember-2: #ffb25c; }
+  * { box-sizing: border-box; margin: 0; }
+  body { background: var(--bg); color: var(--ink); font: 400 16px/1.6 "Hanken Grotesk", system-ui, sans-serif; min-height: 100vh;
+         display: grid; place-items: center; padding: 32px 16px; }
+  main { width: min(1200px, 100%); }
+  .kicker { font: 500 12px/1 "JetBrains Mono", monospace; letter-spacing: .08em; text-transform: uppercase; color: var(--ember-2); }
+  h1 { font: 400 clamp(34px, 5vw, 56px)/1.05 "Instrument Serif", serif; margin: 12px 0 22px; }
+  h1 i { color: var(--ember); }
+  video { display: block; width: 100%; aspect-ratio: 16 / 9; background: #000; border: 1px solid var(--line); border-radius: 16px; }
+  p { margin-top: 16px; color: var(--muted); font-size: 14.5px; max-width: 760px; }
+  a { color: var(--ember-2); }
+  .row { display: flex; flex-wrap: wrap; gap: 10px 24px; margin-top: 18px; }
+</style>
+</head>
+<body>
+<main>
+  <p class="kicker">Team ALAZ · NASA Space Apps Challenge 2026 · 30-second demo</p>
+  <h1>ALAZ Relay: Satellites changed. <i>Fires didn't.</i></h1>
+  <video src="media/alaz-relay-demo.mp4" controls playsinline preload="metadata" poster=""></video>
+  <p>Silent screen recording of the live app with burned-in English subtitles (30.0 s). Captions and capture were produced with SI assistance, as marked by the watermark in the video.</p>
+  <div class="row"><a href="./">Open the app →</a><a href="https://github.com/Etipufhu/alaz-relay">Source code</a><a href="media/alaz-relay-demo.srt">Subtitles (.srt)</a></div>
+</main>
+</body>
+</html>
