@@ -1,0 +1,27 @@
+1
+00:00:00,300 --> 00:00:04,800
+We're Team ALAZ. Our challenge: harmonize NASA's MODIS and VIIRS fire hotspots.
+
+2
+00:00:05,000 --> 00:00:08,600
+Manavgat, Türkiye, 2021. One fire, three satellites, three very different counts.
+
+3
+00:00:08,700 --> 00:00:12,200
+Raw maps: 30× worse than 2008. On the ground: ~3.6×. ALAZ Relay: 4.2×.
+
+4
+00:00:12,400 --> 00:00:16,600
+ALAZ Relay teaches VIIRS to see like MODIS, using the ten years both flew together.
+
+5
+00:00:16,800 --> 00:00:20,600
+Pick any place on Earth and get its burning calendar, month by month since 2000…
+
+6
+00:00:20,700 --> 00:00:24,600
+…typical seasons, anomalies and record months, with honest uncertainty. 235 countries.
+
+7
+00:00:24,800 --> 00:00:28,200
+Validated on years it never saw: r = 0.99. When MODIS retires, the record carries on.

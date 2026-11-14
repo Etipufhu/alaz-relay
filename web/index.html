@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>ALAZ Relay</title>
+  <meta name="description" content="ALAZ Relay harmonizes 25 years of MODIS and VIIRS active-fire hotspots into one consistent burning activity calendar. Satellites changed. Fires didn't.">
+  <meta name="theme-color" content="#050506">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='11' fill='none' stroke='%23ff6a1f' stroke-width='3'/%3E%3Ccircle cx='16' cy='16' r='4' fill='%23ffb25c'/%3E%3C/svg%3E">
+  <script>
+    (function () { try {
+      if (!window.matchMedia || !matchMedia('(prefers-reduced-motion: reduce)').matches) document.documentElement.classList.add('anim');
+    } catch (e) {} })();
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet">
+  <link href="css/app.css" rel="stylesheet">
+</head>
+<body>
+
+<!-- ───────────────────────────── NAV ───────────────────────────── -->
+<header class="nav" id="nav">
+  <a class="mark" href="#top" aria-label="ALAZ Relay, back to top">
+    <svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="11"/><circle cx="16" cy="16" r="4"/></svg>
+    <span>ALAZ <em>Relay</em></span>
+  </a>
+  <nav class="navlinks" id="navlinks">
+    <a href="#proof">The problem</a>
+    <a href="#relay">The relay</a>
+    <a href="#explore">Explorer</a>
+    <a href="#method">Method</a>
+  </nav>
+  <a class="pill pill-glow navcta" href="#explore">Open the calendar</a>
+  <button class="burger" id="burger" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="navlinks">
+    <span></span><span></span><span></span>
+  </button>
+</header>
+
+<!-- ───────────────────────────── HERO ───────────────────────────── -->
+<section class="hero" id="top">
+  <canvas id="globe" aria-hidden="true"></canvas>
+  <div class="hero-shade" aria-hidden="true"></div>
+
+  <div class="hero-copy">
+    <p class="chip glass ent ent-settle" style="--d:.25s"><i class="dot"></i>NASA Space Apps 2026 · MODIS &amp; VIIRS Hot Spots</p>
+    <h1 class="display">
+      <span class="mask"><span class="line" style="--d:.38s">Satellites changed.</span></span>
+      <span class="mask"><span class="line ember-text" style="--d:.52s"><i>Fires didn't.</i></span></span>
+    </h1>
+    <p class="lede ent ent-rise" style="--d:.82s">For 25 years, MODIS and VIIRS have watched every fire on Earth, but they count differently. ALAZ Relay
+      stitches their records into <b>one consistent burning calendar</b>, so the next spike you see is fire, not a new satellite.</p>
+    <div class="ctas ent ent-settle" style="--d:1s">
+      <a class="pill pill-glow" href="#explore">Explore the calendar <span aria-hidden="true">→</span></a>
+      <a class="pill glass" href="#proof">See the proof</a>
+    </div>
+  </div>
+
+  <div class="hero-meta ent ent-rise" style="--d:1.25s">
+    <div class="monthring" aria-hidden="true">
+      <svg viewBox="0 0 44 44"><circle cx="22" cy="22" r="19"/><circle id="ringArc" cx="22" cy="22" r="19"/></svg>
+      <b id="heroMonth">JAN</b>
+    </div>
+    <p><span class="mono">A typical year of fire on Earth</span><br>ALAZ Relay harmonized record, 2003–2025 · 14,000 most active 0.25° cells · drag to spin</p>
+  </div>
+
+  <div class="marquee ent ent-rise" style="--d:1.35s" aria-label="Satellites in the record">
+    <div class="track">
+      <span>Terra · MODIS · 2000</span><i></i><span>Aqua · MODIS · 2002</span><i></i><span>Suomi NPP · VIIRS · 2012</span><i></i>
+      <span>NOAA-20 · VIIRS · 2018</span><i></i><span>NOAA-21 · VIIRS · 2023</span><i></i><span>One record · 2000 → today</span><i></i>
+      <span aria-hidden="true">Terra · MODIS · 2000</span><i></i><span aria-hidden="true">Aqua · MODIS · 2002</span><i></i><span aria-hidden="true">Suomi NPP · VIIRS · 2012</span><i></i>
+      <span aria-hidden="true">NOAA-20 · VIIRS · 2018</span><i></i><span aria-hidden="true">NOAA-21 · VIIRS · 2023</span><i></i><span aria-hidden="true">One record · 2000 → today</span><i></i>
+    </div>
+  </div>
+</section>
+
+<!-- ───────────────────────────── PROOF ───────────────────────────── -->
+<section class="sect proof" id="proof">
+  <div class="wrap">
+    <p class="kicker reveal">01 — The problem</p>
+    <h2 class="h2 reveal">One fire.<br><i>Three different numbers.</i></h2>
+    <p class="body reveal">Manavgat, Türkiye, 28–30 July 2021. Same fire, same three days, three satellites.
+      VIIRS sees fires about ten times smaller than MODIS, so every time a new satellite joins, the raw hotspot count jumps,
+      even if nothing changed on the ground.</p>
+
+    <div class="trio">
+      <figure class="stat reveal" style="--d:.0s">
+        <span class="num mono" data-count="486">0</span>
+        <figcaption><b class="sw modis"></b>MODIS · Terra &amp; Aqua<br><span>1 km pixels, since 2000</span></figcaption>
+      </figure>
+      <figure class="stat reveal" style="--d:.12s">
+        <span class="num mono" data-count="1394">0</span>
+        <figcaption><b class="sw viirs"></b>VIIRS · Suomi NPP<br><span>375 m pixels, since 2012</span></figcaption>
+      </figure>
+      <figure class="stat reveal" style="--d:.24s">
+        <span class="num mono" data-count="1914">0</span>
+        <figcaption><b class="sw viirs"></b>VIIRS · NOAA-20<br><span>375 m pixels, since 2018</span></figcaption>
+      </figure>
+    </div>
+
+    <div class="versus reveal">
+      <div class="vs-head">
+        <h3>How much bigger was 2021 than the 2008 Taşağıl fire?</h3>
+        <p>Same area around Manavgat, July–August of each year.</p>
+      </div>
+      <div class="bars" id="vsBars">
+        <div class="bar raw"><span class="lab">Raw hotspots (what most maps show)</span><span class="track"><i style="--w:100%"></i></span><b class="mono">30×</b></div>
+        <div class="bar alaz"><span class="lab">ALAZ Relay, harmonized</span><span class="track"><i style="--w:13.7%"></i></span><b class="mono">4.2×</b></div>
+        <div class="bar truth"><span class="lab">Burned area on the ground</span><span class="track"><i style="--w:12%"></i><s style="--a:11.3%;--b:12.7%"></s></span><b class="mono">3.4–3.8×</b></div>
+      </div>
+      <p class="fine">Burned area: ~16,000 ha in 2008 and ~55,000–60,000 ha in 2021 (Turkish Academy of Sciences; Gebze Technical University mapping; DHA).
+        This is one illustrative case, not a full validation; see the method section for the systematic test.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ───────────────────────────── RELAY ───────────────────────────── -->
+<section class="sect relaysect" id="relay">
+  <div class="wrap">
+    <p class="kicker reveal">02 — The relay</p>
+    <h2 class="h2 reveal">Every satellite<br><i>teaches the next one.</i></h2>
+    <p class="body reveal">While two satellites fly together, we learn how the old one would have seen what the new one sees.
+      Aqua and VIIRS both cross the equator around 13:30, so for fourteen years they have watched the same fires
+      at almost the same moment. That overlap is our laboratory.</p>
+
+    <div class="lanes reveal" id="lanes" aria-label="Satellite timeline"></div>
+
+    <ol class="steps">
+      <li class="step reveal"><span class="n mono">01</span><h3>Clean</h3>
+        <p>Drop heat that isn't fire: steel mills, power plants, gas flares, volcanoes. In Türkiye, <b>27%</b> of VIIRS hotspots are static industrial sources, compared with 3% for MODIS.</p></li>
+      <li class="step reveal" style="--d:.08s"><span class="n mono">02</span><h3>One unit</h3>
+        <p>Turn points into <b>fire cell-days</b> on a 0.1° grid. A burning cell counts once per day, no matter how many pixels each sensor lit up.</p></li>
+      <li class="step reveal" style="--d:.16s"><span class="n mono">03</span><h3>Teach</h3>
+        <p>For every VIIRS fire, learn the chance MODIS would also have seen it, by fire power, size, day/night and region. Sum those chances to get a <b>virtual MODIS</b> that outlives the real one.</p>
+        <div class="curve" id="curve"></div></li>
+      <li class="step reveal" style="--d:.24s"><span class="n mono">04</span><h3>Prove it</h3>
+        <p>Train on 2012–2017, predict 2018–2021 and compare with what Aqua actually saw: <b>r = 0.99</b> across 3,965 country-months worldwide, bias +3%. The remaining error becomes the uncertainty band on every month.</p></li>
+    </ol>
+  </div>
+</section>
+
+<!-- ───────────────────────────── EXPLORER ───────────────────────────── -->
+<section class="explore" id="explore">
+  <div class="explore-head wrap">
+    <p class="kicker">03 — Explorer</p>
+    <h2 class="h2 small">Your area, <i>twenty-six fire seasons</i></h2>
+  </div>
+  <div class="layout">
+    <section class="mapcol">
+      <div id="map" aria-label="Map: draw an area of interest"></div>
+      <div class="maptools" role="toolbar" aria-label="Area tools">
+        <button id="toolRect" class="tool" title="Drag a rectangle">▭ Rectangle</button>
+        <button id="toolPoly" class="tool" title="Click points, double-click to finish">⬠ Polygon</button>
+        <button id="toolClear" class="tool ghost" title="Clear area">Clear</button>
+      </div>
+      <div class="mapfoot">
+        <form id="pointForm" class="pointform" autocomplete="off">
+          <label>Lat <input id="inLat" type="number" step="any" min="-90" max="90" placeholder="36.8"></label>
+          <label>Lon <input id="inLon" type="number" step="any" min="-180" max="180" placeholder="31.4"></label>
+          <label>Radius km <input id="inRad" type="number" step="any" min="5" max="500" value="25"></label>
+          <button type="submit" class="tool">Go</button>
+        </form>
+        <label class="country">Country
+          <select id="countrySel"><option value="">Pick a country</option></select>
+        </label>
+      </div>
+      <div class="stories" id="stories" aria-label="Example areas"></div>
+    </section>
+
+    <section class="panel" id="panel">
+      <div class="empty" id="emptyState">
+        <svg viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="44"/><circle cx="60" cy="60" r="28"/><circle cx="60" cy="60" r="6"/></svg>
+        <h3>Draw an area to read its fire history</h3>
+        <p>Pick a country, drag a rectangle, or start from one of the stories below the map. Every month since 2000 is shown in
+          <b>one consistent unit</b>, with its uncertainty.</p>
+      </div>
+
+      <div id="results" hidden>
+        <div class="aoihead">
+          <div>
+            <h3 id="aoiName">Area</h3>
+            <p class="sub" id="aoiSub"></p>
+          </div>
+          <button id="dlCsv" class="pill glass sm">Download CSV</button>
+        </div>
+
+        <div class="cards" id="cards"></div>
+
+        <div class="block">
+          <div class="blockhead">
+            <h4>Burning activity calendar</h4>
+            <div class="seg" role="tablist" aria-label="Calendar mode">
+              <button role="tab" data-mode="harm" class="on">Harmonized</button>
+              <button role="tab" data-mode="anom">vs. normal</button>
+              <button role="tab" data-mode="raw">Raw hotspots</button>
+            </div>
+          </div>
+          <p class="hint" id="calHint"></p>
+          <div id="calendar" class="calendar"></div>
+          <div id="calLegend" class="legend"></div>
+        </div>
+
+        <div class="block">
+          <div class="blockhead"><h4>The relay, in this area</h4></div>
+          <p class="hint">Raw hotspot counts jump when a satellite joins. The harmonized line stays in one unit
+            (Aqua-MODIS-equivalent fire cell-days), with a 90% uncertainty band.</p>
+          <div id="relayChart" class="chart"></div>
+          <div id="timeline" class="chart timeline"></div>
+        </div>
+
+        <div class="block">
+          <div class="blockhead"><h4>Seasonality</h4></div>
+          <p class="hint">A typical year (median and interquartile band) against the selected year.</p>
+          <div id="season" class="chart"></div>
+        </div>
+      </div>
+    </section>
+  </div>
+</section>
+
+<!-- ───────────────────────────── METHOD / FOOTER ───────────────────────────── -->
+<section class="sect method" id="method">
+  <div class="wrap">
+    <p class="kicker reveal">04 — Method, data &amp; limits</p>
+    <h2 class="h2 reveal">Open data,<br><i>open about its limits.</i></h2>
+    <figure class="handover reveal" aria-labelledby="hoTitle">
+      <div class="ho-head">
+        <div>
+          <p class="kicker">The baton test</p>
+          <h3 id="hoTitle">Two satellites, one answer.</h3>
+          <p class="ho-lede">Each VIIRS satellite learns its own way to imitate Aqua. If the method is sound, the two imitations must agree with each other, and they do. That is why the record does not jump when Suomi NPP's stream ended in November 2026 and NOAA-20 carries on alone.</p>
+        </div>
+        <dl class="ho-stats" id="hoStats"></dl>
+      </div>
+      <div id="handover" class="ho-chart"></div>
+      <figcaption class="fine">Global monthly fire cell-days on the 0.1° grid. Lines: actual Aqua MODIS, and virtual Aqua rebuilt from each VIIRS satellite. Agreement statistics use country-months where both satellites see at least 20 cell-days (2018–2025). From 2022 Aqua's orbit drifts later into the afternoon, when fires burn hotter, so real Aqua starts to read high; the two VIIRS series do not drift. Dips in the Suomi NPP line (Jul–Aug 2022, Jul 2024) are satellite outages: the relay is decided day by day, so on those days NOAA-20 alone carries the record.</figcaption>
+    </figure>
+    <div class="cols">
+      <div class="reveal">
+        <h3>Data</h3>
+        <ul>
+          <li>NASA FIRMS standard archive: MODIS Collection 6.1 active fires (Terra, Aqua), 2000–2025</li>
+          <li>NASA FIRMS standard archive: VIIRS 375 m active fires (Suomi NPP 2012–2025, NOAA-20 2018–2025)</li>
+          <li>Static-source flags (FIRMS <code>type</code>) and confidence classes from the same products</li>
+          <li>World land outline: Natural Earth via world-atlas · Basemap © OpenStreetMap contributors © CARTO</li>
+        </ul>
+      </div>
+      <div class="reveal" style="--d:.08s">
+        <h3>Validation</h3>
+        <div id="valTable"></div>
+        <p class="fine">Virtual Aqua vs. actual Aqua, monthly country totals on held-out years.</p>
+      </div>
+      <div class="reveal" style="--d:.16s">
+        <h3>Known limits</h3>
+        <ul>
+          <li>The unit is <i>fire cell-days</i>, not burned area. It measures how often fire is seen, not how much land burned.</li>
+          <li>From 2022 Aqua's orbit drifts later into the afternoon; we keep it as a check, not a reference.</li>
+          <li>NOAA-20 had only two training years (2018–19); even so its held-out error matches Suomi NPP's (see table).</li>
+          <li>NOAA-21 and the 2026 near-real-time stream are next in the relay.</li>
+        </ul>
+      </div>
+    </div>
+    <footer class="foot">
+      <div class="mark big"><svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="11"/><circle cx="16" cy="16" r="4"/></svg><span>ALAZ <em>Relay</em></span></div>
+      <p>Team ALAZ · NASA International Space Apps Challenge 2026 · Challenge: Harmonization of MODIS and VIIRS Hot Spots.<br>
+        Built with AI assistance (code and analysis); the concept, choices and storytelling are the team's. Not affiliated with or endorsed by NASA.</p>
+    </footer>
+  </div>
+</section>
+
+<div id="tip" class="tip" role="tooltip" hidden></div>
+
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js"></script>
+<script type="module" src="js/hero.js"></script>
+<script type="module" src="js/story.js"></script>
+<script type="module" src="js/main.js"></script>
+</body>
+</html>

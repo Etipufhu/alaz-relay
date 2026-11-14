@@ -1,0 +1,9 @@
+duckdb
+pandas
+pyarrow
+numpy
+requests
+pillow
+# demo video only
+playwright
+imageio-ffmpeg
