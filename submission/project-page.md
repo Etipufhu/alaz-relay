@@ -16,6 +16,8 @@ ALAZ Relay fixes the record instead of the map. Using the ten years when Aqua MO
 
 On top of that record we built a free web app: draw any area on Earth (or pick one of 235 countries) and get its burning activity calendar since 2000. You see typical fire seasons, anomalies against the historical median, record months, and an honest uncertainty band, and you can download it as CSV. Tested on years it never saw, the method reproduces real Aqua with r = 0.99 worldwide.
 
+The harmonized record changes the story. Summed raw hotspots say global fire activity in 2012–2022 was 6.1 times higher than in 2003–2011. In one consistent unit it was 11.5% lower, and Aqua MODIS on its own (never harmonized) independently shows −11%. This agrees with published evidence of declining global burned area. The record also finds real disasters without being told about them: a simple leave-one-out test flags 45 country-months since 2012 that beat every other year even at the low end of their uncertainty. They include Canada in June 2023, Sweden in July 2018, Chile in February 2023, Riau (Indonesia) in March 2014 and Corrientes (Argentina) in January 2022.
+
 This matters because fire trends drive real decisions: firefighting budgets, insurance, land policy and climate science. A trend that is really a satellite change can mislead all of them.
 
 ---
@@ -46,6 +48,12 @@ ALAZ Relay is a harmonized, global, 25-year active-fire record plus a web app to
 - **Burning activity calendar.** For any area the app shows a year × month calendar. You can view it three ways: harmonized activity, anomaly vs. the 2003–2022 median, or raw hotspots for comparison. It also shows peak season, most active year, and how much of the apparent trend was only a sensor change. A month is flagged as an anomaly only when the lower end of its 90% uncertainty interval is above the historical upper quartile. It is a "record" when it is above every month in the baseline.
 - **Accessible and open.** Color ramps are perceptually ordered and readable in dark mode. Areas can be drawn as rectangles or polygons, entered as latitude/longitude plus radius, or picked as a country. All results download as CSV. The site is static (no server, no API key), so anyone can host or reuse it.
 
+### What the record reveals
+
+- **Global fire went down, not up.** We indexed yearly global totals to 2003–2011 = 100. Raw hotspots, summed as most fire maps do, jump to 485 in 2012 (Suomi NPP joins) and to 688–895 from 2018 (NOAA-20 joins): ×6.1 on average over 2012–2022. ALAZ Relay gives 88.5 for the same years (−11.5%). Aqua MODIS alone, a single unchanged sensor that we never adjusted, gives 89.0 (−11%). The decline matches published evidence that global burned area is falling, mostly in savannas (Andela et al., 2017).
+- **It finds disasters on its own.** For every country and calendar month since 2012, we ask whether that month is higher than the same month in every other year since 2001, using a leave-one-out comparison. 516 months are the highest on record. For 45 of them, even the low end of the 90% uncertainty interval beats every other year. The detector is never given any news, yet these include Canada's record 2023 season (June 2023, 8.9× a normal June), Sweden's 2018 forest fires (11.6×), Chile's Biobío and Ñuble megafires (February 2023, 8.4×), the Riau peat fires (March 2014, 6.1×) and the Corrientes wetland fires (January 2022, 4.9×). It is also honest about what it cannot separate: Australia's Black Summer (December 2019) and the 2020 US West Coast fires are the highest months since 2001, but they stay within the uncertainty band at national scale.
+- **Why you draw areas.** At country level, Türkiye's August 2021 ranks only 17th of 25 Augusts, because crop-stubble burning in the southeast dominates the national total. Draw the area around Manavgat and July–August 2021 becomes the record by a wide margin.
+
 ### How we know it works (validity)
 
 - **Held-out validation.** We trained on 2012–2017 and predicted Aqua for 2018–2021 from Suomi NPP alone. Across 3,965 country-months worldwide: r (log) = 0.987, bias +2.8%, median error 15%. NOAA-20, trained only on 2018–2019 and tested on 2020–2021: r = 0.986, bias +3.5%, median error 15%. The remaining error becomes the uncertainty band on every month.
@@ -67,7 +75,7 @@ We want the next fire spike that makes the news to be checked against a record t
 
 - **Pipeline:** Python 3.11, DuckDB, pandas, NumPy, PyArrow. It processes 548.5 million FIRMS records into 32 million harmonized cell-months.
 - **Web app:** plain HTML/CSS/JavaScript, MapLibre GL JS, D3.js, topojson-client. Compact binary tiles (65 MB for the whole planet) are decoded in the browser.
-- **Demo video:** captured from the live app with Playwright and encoded with FFmpeg.
+- **Demo video:** animated in Remotion (React) from our own data, plus a Playwright screen recording of the live app. The voiceover is an AI voice generated with ElevenLabs from our script. The music and sound effects are synthesized in Python (NumPy/SciPy), so no copyrighted audio is used.
 
 ---
 
@@ -80,7 +88,8 @@ Yes. We used Claude (Anthropic) as an assistant throughout the hackathon:
 - discussing and comparing solution directions, which the team then chose between, combined and named;
 - writing most of the code (data pipeline, statistical model, web app) under the team's direction, and running the analyses;
 - drafting English text for the website and this page, reviewed and edited by the team;
-- producing the demo video by scripting a screen capture of our own web app. The video carries a visible "SI-assisted production" watermark.
+- producing the demo video: the animations were coded in Remotion with Claude's help and are drawn from our own NASA FIRMS data and a screen recording of our web app. The video carries a visible "SI-assisted production · AI voice (ElevenLabs)" watermark.
+- **AI-generated audio:** the demo voiceover is an AI voice generated with ElevenLabs (text-to-speech) reading the team's English script. This is also stated in the video's watermark and file metadata, and on the demo page. The background music and sound effects are synthesized from code; no music generator or copyrighted audio is used.
 
 The website footer and the code repository state that the code and analysis were built with AI assistance. No SI-generated imagery is used; all maps and charts are drawn directly from NASA data.
 
@@ -111,17 +120,19 @@ The website footer and the code repository state that the code and analysis were
 **Science**
 - Giglio, L., Schroeder, W., Justice, C. O. (2016). The collection 6 MODIS active fire detection algorithm and fire products. *Remote Sensing of Environment*, 178, 31–41.
 - Schroeder, W., Oliva, P., Giglio, L., Csiszar, I. A. (2014). The New VIIRS 375 m active fire detection data product: Algorithm description and initial assessment. *Remote Sensing of Environment*, 143, 85–96.
+- Andela, N., et al. (2017). A human-driven decline in global burned area. *Science*, 356(6345), 1356–1362.
 
 **Software (all open source)**
 - DuckDB, pandas, NumPy, PyArrow, Pillow, Requests (Python)
 - MapLibre GL JS 4.7, D3.js 7.9, topojson-client 3.1
-- Playwright and FFmpeg (via imageio-ffmpeg), used to record the demo video
+- Remotion 4 (React video), Playwright and FFmpeg, used to make the demo video; SciPy for the synthesized soundtrack
 - Fonts from Google Fonts (SIL Open Font License): Instrument Serif, Hanken Grotesk, JetBrains Mono
 
-**SI tool**
+**SI tools**
 - Claude (Anthropic), coding and analysis assistant; see the SI field.
+- ElevenLabs text-to-speech, AI voiceover of the demo video (the team's script).
 
-No copyrighted images, music or text were used. The demo video is silent and has burned-in English subtitles. It shows no people.
+No copyrighted images, music or text were used. The demo video has burned-in English subtitles and an AI voiceover (disclosed in the video). It shows no people.
 
 ---
 

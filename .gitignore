@@ -3,3 +3,8 @@
 __pycache__/
 *.pyc
 .venv/
+pipeline/demo/remotion/node_modules/
+pipeline/demo/remotion/out/
+pipeline/demo/remotion/vo/*.wav
+pipeline/demo/remotion/vo/take1.mp3
+pipeline/demo/remotion/public/mix.wav

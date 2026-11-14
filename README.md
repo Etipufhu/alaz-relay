@@ -12,6 +12,11 @@ NASA's MODIS (Terra, Aqua) and VIIRS (Suomi NPP, NOAA-20) instruments have recor
 
 Hotspots are filtered (FIRMS `type = 0` presumed vegetation fire, confidence not low) and turned into **fire cell-days**: a 0.1° cell counts once per day and overpass. During the 2012–2021 overlap, while Aqua and the VIIRS satellites cross the equator at about the same time, we learn P(Aqua detects | VIIRS cell-day) by fire radiative power, VIIRS pixel count, day/night and country. These estimates are shrunk hierarchically towards global values. We also learn the rate of Aqua-only cell-days per country, day/night and month. Summing both gives *virtual Aqua*. The record uses three sources: Terra converted to Aqua units (2000–2002), real Aqua (2002–2011), and virtual Aqua averaged over the VIIRS satellites that delivered data each day (2012 onwards). An outage of one satellite is covered by the other.
 
+## What the record reveals
+
+- **Global fire went down, not up.** With 2003–2011 = 100, summed raw hotspots reach ×6.1 over 2012–2022, because Suomi NPP and NOAA-20 joined. ALAZ Relay shows −11.5% for the same years. Aqua MODIS alone, never harmonized, shows −11%. This is consistent with Andela et al. (2017, *Science*), who report declining global burned area.
+- **It finds disasters on its own.** A leave-one-out test runs over every country and calendar month since 2012. It flags 45 months that beat every other year even at the low end of their 90% uncertainty interval. Examples: Canada in June 2023, Sweden in July 2018, Chile in February 2023, Riau (Indonesia) in March 2014, and Corrientes (Argentina) in January 2022. See `pipeline/export_findings.py`.
+
 ## Validation
 
 | VIIRS satellite | train | test | r (log) | bias | median abs. error |
@@ -31,7 +36,8 @@ pipeline/                       data pipeline (Python 3.11 + DuckDB)
   relay_check.py                "baton test": S-NPP vs NOAA-20 agreement
   export_web.py                 static web data (country series, binary tiles, overview raster)
   export_hero.py                landing-page globe data
-  demo/record_demo.py           records the 30 s demo from the live app
+  export_findings.py            global trend + automatic record-month detection (web/data/findings.json)
+  demo/remotion/                the 30 s demo: Remotion project, app capture, synthesized score + AI voiceover mix
 web/                            the static web app (deployed by GitHub Actions)
 submission/                     project write-up (demo video lives in web/media)
 ```
@@ -53,6 +59,6 @@ python -m http.server 8765 --directory web
 - Libraries: DuckDB, pandas, NumPy, PyArrow, Pillow, MapLibre GL JS, D3.js, topojson-client, Playwright, FFmpeg.
 - Fonts: Instrument Serif, Hanken Grotesk, JetBrains Mono (SIL OFL).
 
-**AI disclosure:** the code and analysis in this repository were written with AI assistance (Claude, Anthropic) under the team's direction. The demo video carries a visible "SI-assisted production" watermark.
+**AI disclosure:** the code and analysis in this repository were written with AI assistance (Claude, Anthropic) under the team's direction. The demo video carries a visible "SI-assisted production · AI voice (ElevenLabs)" watermark. Its voiceover is an AI voice generated with ElevenLabs from the team's script, and this is also stated in the MP4 metadata and on the demo page. The music and sound effects are synthesized from code (`pipeline/demo/remotion/make_audio.py`).
 
 Not affiliated with or endorsed by NASA.
