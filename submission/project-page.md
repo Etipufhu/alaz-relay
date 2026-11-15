@@ -91,7 +91,9 @@ Yes. We used Claude (Anthropic) as an assistant throughout the hackathon:
 - producing the demo video: the animations were coded in Remotion with Claude's help and are drawn from our own NASA FIRMS data and a screen recording of our web app. The video carries a visible "SI-assisted production · AI voice (ElevenLabs)" watermark.
 - **AI-generated audio:** the demo voiceover is an AI voice generated with ElevenLabs (text-to-speech) reading the team's English script. This is also stated in the video's watermark and file metadata, and on the demo page. The background music and sound effects are synthesized from code; no music generator or copyrighted audio is used.
 
-The website footer and the code repository state that the code and analysis were built with AI assistance. No SI-generated imagery is used; all maps and charts are drawn directly from NASA data.
+- **AI-generated images:** two decorative illustrations on the website (three satellites passing a beam of light in "The relay" section, and Earth's night side in the closing band) were made with an AI image generator from prompts written for this project. Each carries a visible "AI-generated image" label, and the relay picture's caption says so too. The flickering lights, twinkling stars and light pulses on top of them are our own SVG/CSS animation. They are illustrations only: no data is shown in them.
+
+The website footer and the code repository state that the code and analysis were built with AI assistance. All maps and charts are drawn directly from NASA data; the two illustrations above are the only SI-generated images.
 
 ---
 
@@ -131,6 +133,7 @@ The website footer and the code repository state that the code and analysis were
 **SI tools**
 - Claude (Anthropic), coding and analysis assistant; see the SI field.
 - ElevenLabs text-to-speech, AI voiceover of the demo video (the team's script).
+- AI image generator: the two decorative illustrations on the website (labelled "AI-generated image").
 
 No copyrighted images, music or text were used. The demo video has burned-in English subtitles and an AI voiceover (disclosed in the video). It shows no people.
 

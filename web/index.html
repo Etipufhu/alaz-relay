@@ -125,6 +125,22 @@
       Aqua and VIIRS both cross the equator around 13:30, so for fourteen years they have watched the same fires
       at almost the same moment. That overlap is our laboratory.</p>
 
+    <figure class="relayart reveal">
+      <div class="art-frame" data-art-host>
+        <div class="art-stage">
+          <img src="media/relay-art.webp" width="1536" height="1024" loading="lazy" decoding="async"
+               alt="Illustration: three satellites in a row above the night side of Earth, linked by beams of orange light.">
+          <svg class="art-fx" data-art="relay" viewBox="0 0 1536 1024" preserveAspectRatio="xMidYMid slice" aria-hidden="true"></svg>
+        </div>
+        <span class="sat-lab" style="left:17%;top:11%">Aqua · MODIS</span>
+        <span class="sat-lab" style="left:49%;top:25%">Suomi NPP · VIIRS</span>
+        <span class="sat-lab" style="left:87%;top:73%">NOAA-20 · VIIRS</span>
+        <span class="ai-mark">AI-generated image</span>
+      </div>
+      <figcaption>The relay, as a picture: each satellite hands the fire record to the next, so the count never resets.
+        <span class="faint">Illustration made with an AI image generator; satellite shapes are not to scale or exact.</span></figcaption>
+    </figure>
+
     <div class="lanes reveal" id="lanes" aria-label="Satellite timeline"></div>
 
     <ol class="steps">
@@ -296,6 +312,23 @@
   </div>
 </section>
 
+<section class="outro" id="outro" aria-labelledby="outroTitle">
+  <div class="outro-art" data-art-host aria-hidden="true">
+    <img src="media/earth-limb.webp" width="1672" height="941" alt="" loading="lazy" decoding="async">
+    <svg class="art-fx" data-art="earth" viewBox="0 0 1672 941" preserveAspectRatio="xMaxYMid slice"></svg>
+  </div>
+  <span class="ai-mark">AI-generated image</span>
+  <div class="wrap outro-copy">
+    <p class="kicker reveal">One record · 2000 → today</p>
+    <h2 class="h2 reveal" id="outroTitle">Satellites will keep changing.<br><i>The fire record shouldn't break.</i></h2>
+    <p class="body reveal">Terra and Aqua are drifting toward the end of their missions. When they stop, ALAZ Relay keeps counting fire in the same unit, through VIIRS.</p>
+    <div class="ctas reveal">
+      <a class="pill pill-glow" href="#explore">Explore your area <span aria-hidden="true">→</span></a>
+      <a class="pill glass" href="demo.html">Watch the 30 s demo</a>
+    </div>
+  </div>
+</section>
+
 <section class="sect method" id="method">
   <div class="wrap">
     <p class="kicker reveal">05 — Method, data &amp; limits</p>
@@ -353,5 +386,6 @@
 <script type="module" src="js/hero.js"></script>
 <script type="module" src="js/story.js"></script>
 <script type="module" src="js/main.js"></script>
+<script type="module" src="js/art.js"></script>
 </body>
 </html>

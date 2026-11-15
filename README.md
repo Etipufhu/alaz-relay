@@ -59,6 +59,6 @@ python -m http.server 8765 --directory web
 - Libraries: DuckDB, pandas, NumPy, PyArrow, Pillow, MapLibre GL JS, D3.js, topojson-client, Playwright, FFmpeg.
 - Fonts: Instrument Serif, Hanken Grotesk, JetBrains Mono (SIL OFL).
 
-**AI disclosure:** the code and analysis in this repository were written with AI assistance (Claude, Anthropic) under the team's direction. The demo video carries a visible "SI-assisted production · AI voice (ElevenLabs)" watermark. Its voiceover is an AI voice generated with ElevenLabs from the team's script, and this is also stated in the MP4 metadata and on the demo page. The music and sound effects are synthesized from code (`pipeline/demo/remotion/make_audio.py`).
+**AI disclosure:** the code and analysis in this repository were written with AI assistance (Claude, Anthropic) under the team's direction. The demo video carries a visible "SI-assisted production · AI voice (ElevenLabs)" watermark. Its voiceover is an AI voice generated with ElevenLabs from the team's script, and this is also stated in the MP4 metadata and on the demo page. The music and sound effects are synthesized from code (`pipeline/demo/remotion/make_audio.py`). The two decorative illustrations on the website (`web/media/relay-art.webp`, `web/media/earth-limb.webp`) were made with an AI image generator and are labelled "AI-generated image" on the page; their light animations are our own code (`web/js/art.js`).
 
 Not affiliated with or endorsed by NASA.
