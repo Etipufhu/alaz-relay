@@ -175,6 +175,11 @@
         <h3>Draw an area to read its fire history</h3>
         <p>Pick a country, drag a rectangle, or start from one of the stories below the map. Every month since 2000 is shown in
           <b>one consistent unit</b>, with its uncertainty.</p>
+        <ol class="steps">
+          <li><b>Choose a place:</b> click <i>Manavgat</i> below the map, pick a country, or draw with <i>Rectangle</i>.</li>
+          <li><b>Read the summary:</b> plain-language answers about its fire season, unusual months and long-term change.</li>
+          <li><b>Click any month</b> in the calendar to see that month's fires on the map.</li>
+        </ol>
       </div>
 
       <div id="results" hidden>
@@ -186,9 +191,27 @@
           <button id="dlCsv" class="pill glass sm">Download CSV</button>
         </div>
 
-        <div class="cards" id="cards"></div>
+        <nav class="ptabs" id="ptabs" aria-label="Sections of the result">
+          <button data-t="secSummary" class="on">① Summary</button>
+          <button data-t="secCal">② Calendar</button>
+          <button data-t="secSeason">③ Season</button>
+          <button data-t="secRelay">④ Satellites</button>
+        </nav>
 
-        <div class="block">
+        <div class="block read" id="secSummary">
+          <div class="blockhead"><h4>What this tells you</h4></div>
+          <ul class="readout" id="readout"></ul>
+          <div class="cards" id="cards"></div>
+          <details class="howto">
+            <summary>What is a “fire cell-day”?</summary>
+            <p>The map is cut into squares of 0.1° (about 10 × 10 km). A square counts as <b>one fire cell-day</b> when
+              Aqua MODIS sees fire in it on one day. From 2012 on, when Aqua is replaced by VIIRS, we count what Aqua
+              <i>would have</i> seen, so every year uses the same yardstick. 30 fire cell-days can be one large fire burning
+              for a month, or 30 small fires on one day. It measures how often fire is seen, not hectares burned.</p>
+          </details>
+        </div>
+
+        <div class="block" id="secCal">
           <div class="blockhead">
             <h4>Burning activity calendar</h4>
             <div class="seg" role="tablist" aria-label="Calendar mode">
@@ -198,23 +221,49 @@
             </div>
           </div>
           <p class="hint" id="calHint"></p>
+          <details class="howto" open>
+            <summary>How to read this</summary>
+            <ul>
+              <li>Each <b>row is a year</b> (2000 at the top), each <b>column a month</b>. Brighter square = more fire that month.</li>
+              <li>A <b>bright vertical band</b> is the fire season. A <b>single bright square</b> is an unusual month. A <b>brighter row</b> is an unusual year.</li>
+              <li><b>Click any square</b>: its fires appear on the map, and the summary and season chart switch to that month.</li>
+              <li><b>vs. normal</b>: red = more fire than usual for that month, blue = less, white outline = record.
+                <b>Raw hotspots</b>: what other fire maps show. Everything jumps in 2012 when VIIRS joins; that is the satellite, not the fire.</li>
+            </ul>
+          </details>
           <div id="calendar" class="calendar"></div>
           <div id="calLegend" class="legend"></div>
         </div>
 
-        <div class="block">
-          <div class="blockhead"><h4>The relay, in this area</h4></div>
-          <p class="hint">Raw hotspot counts jump when a satellite joins. The harmonized line stays in one unit
-            (Aqua-MODIS-equivalent fire cell-days), with a 90% uncertainty band.</p>
+        <div class="block" id="secSeason">
+          <div class="blockhead"><h4>Fire season: <span id="seasonYear">this year</span> vs. a normal year</h4></div>
+          <details class="howto" open>
+            <summary>How to read this</summary>
+            <ul>
+              <li><b>Grey line</b>: a normal year (median of 2003–2022). <b>Grey band</b>: the usual range (middle half of years).</li>
+              <li><b>Orange line</b>: the year you selected. Orange above the grey band = more fire than usual that month.</li>
+              <li>The thin vertical orange ticks show the uncertainty of each month.</li>
+            </ul>
+          </details>
+          <div id="season" class="chart"></div>
+        </div>
+
+        <div class="block" id="secRelay">
+          <div class="blockhead"><h4>Satellites changed here. Did the fire?</h4></div>
+          <details class="howto" open>
+            <summary>How to read this</summary>
+            <ul>
+              <li><b>Grey dashed line</b>: raw hotspot counts per year, all satellites added up, as most fire maps do.</li>
+              <li><b>Orange line</b>: ALAZ Relay, the same area in one consistent unit (shaded = 90% uncertainty).</li>
+              <li>If the grey line jumps in 2012 or 2018 while the orange line does not, the jump came from a new satellite, not from more fire.
+                The vertical axis is logarithmic, so equal steps mean equal ratios.</li>
+              <li>Below: which satellites were flying. The harmonized record switches source without a break.</li>
+            </ul>
+          </details>
           <div id="relayChart" class="chart"></div>
           <div id="timeline" class="chart timeline"></div>
         </div>
-
-        <div class="block">
-          <div class="blockhead"><h4>Seasonality</h4></div>
-          <p class="hint">A typical year (median and interquartile band) against the selected year.</p>
-          <div id="season" class="chart"></div>
-        </div>
+        <div class="morecue" id="moreCue"><span>More below: calendar, season, satellites</span> ↓</div>
       </div>
     </section>
   </div>

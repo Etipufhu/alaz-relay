@@ -14,6 +14,7 @@ const STORIES = [
   { label: "SE Türkiye stubble burning", ring: rectRing(37.0, 36.6, 41.5, 38.2), month: "2021-06", name: "Harran plain & SE Türkiye croplands" },
 ];
 
+let MAP = null;
 const state = { series: null, name: "", mode: "harm", selected: null, base: null, baseYears: [2003, 2022] };
 
 function rectRing(w, s, e, n) { return [[w, s], [e, s], [e, n], [w, n], [w, s]]; }
@@ -22,6 +23,9 @@ const mIndex = ym => (+ym.slice(0, 4) - 2000) * 12 + (+ym.slice(5, 7) - 1);
 async function init() {
   await loadMeta();
   const mapApi = createMap($("map"), area => selectArea(area, mapApi));
+  MAP = mapApi;
+  window.ALAZ.map = mapApi.map;
+  wirePanel();
 
   const sel = $("countrySel");
   for (const c of META.countries) sel.append(new Option(c.name, c.slug));
@@ -39,7 +43,7 @@ async function init() {
     if (!Number.isFinite(lat) || !Number.isFinite(lon) || $("inLat").value === "" || $("inLon").value === "") return;
     selectArea({ ring: circleRing(lat, lon, km), name: `${km} km around ${lat.toFixed(2)}, ${lon.toFixed(2)}` }, mapApi);
   };
-  $("toolClear").onclick = () => { mapApi.clearArea(); $("results").hidden = true; $("emptyState").hidden = false; };
+  $("toolClear").onclick = () => { mapApi.clearArea(); mapApi.setMonth(null); $("results").hidden = true; $("emptyState").hidden = false; };
 
   document.querySelectorAll(".seg button").forEach(b => (b.onclick = () => {
     document.querySelectorAll(".seg button").forEach(x => x.classList.toggle("on", x === b));
@@ -157,6 +161,7 @@ function show(series, name, sub, month = null) {
   $("aoiSub").textContent = sub;
   $("emptyState").hidden = true;
   $("results").hidden = false;
+  $("panel").scrollTop = 0;
   render();
   drawTimeline($("timeline"));
 }
@@ -178,7 +183,11 @@ function render() {
   drawCalendar($("calendar"), $("calLegend"), series, base, mode, selected, m => { state.selected = m; render(); });
   drawRelay($("relayChart"), series);
   drawSeason($("season"), series, base, 2000 + Math.floor(selected / 12));
+  $("seasonYear").textContent = String(2000 + Math.floor(selected / 12));
   renderCards();
+  renderReadout();
+  MAP?.setMonth(selected);
+  updateCue();
 }
 
 function renderCards() {
@@ -205,10 +214,96 @@ function renderCards() {
       cls: c.cls === "record" || c.cls === "above" ? "alert" : c.cls === "below" || c.cls === "normal" ? "calm" : "" },
     { k: "Peak fire season", v: MONTHS[peakMo], d: `median ${fmt1(base[peakMo].med)} cell-days in a typical ${MONTHS[peakMo]}` },
     { k: "Most active year", v: top.y > 0 ? String(top.y) : "—", d: `${fmt(top.v)} harmonized cell-days` },
-    { k: "Sensor jump removed", v: rawPre > 0 ? `×${(rawPost / rawPre).toFixed(1)} → ×${(hPost / hPre).toFixed(1)}` : "—",
-      d: "raw hotspots vs harmonized, 2013–17 relative to 2003–11" },
+    { k: "Raw maps vs. ALAZ Relay", v: rawPre > 0 ? `×${(rawPost / rawPre).toFixed(1)} → ×${(hPost / hPre).toFixed(1)}` : "—",
+      d: "change 2013–17 vs 2003–11: raw hotspots say the first, one consistent unit says the second" },
   ];
   $("cards").innerHTML = cards.map(x => `<div class="card ${x.cls || ""}"><div class="k">${x.k}</div><div class="v">${x.v}</div><div class="d">${x.d}</div></div>`).join("");
+}
+
+const MONTHS_LONG = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+/** Plain-language reading of the selected area: season, the selected month, long-term change, worst year. */
+function renderReadout() {
+  const { series, base, selected } = state;
+  const items = [];
+  const yrs = d3.range(2001, 2026);
+  const annual = new Map(yrs.map(y => [y, d3.sum(d3.range(12), mo => series.harm[(y - 2000) * 12 + mo])]));
+  const typical = d3.median(d3.range(2003, 2023), y => annual.get(y)) || 0;
+  const n1 = v => (v < 10 ? fmt1(v) : fmt(v));
+
+  if (typical < 3) items.push(`<b>Fire is rare here.</b> A typical year has about ${n1(typical)} fire cell-days, so single months
+    can swing a lot and the uncertainty is wide. A larger area gives steadier numbers.`);
+
+  // 1. fire season
+  const med = base.map(b => b.med || 0), peak = d3.maxIndex(med);
+  if (med[peak] > 0) {
+    const strong = d3.range(12).filter(i => med[i] >= 0.5 * med[peak]);
+    const runs = [];
+    for (const i of strong) (runs.length && runs.at(-1).at(-1) === i - 1) ? runs.at(-1).push(i) : runs.push([i]);
+    const txt = runs.map(r => (r.length > 1 ? `${MONTHS[r[0]]}–${MONTHS[r.at(-1)]}` : MONTHS[r[0]])).join(" and ");
+    const share = d3.sum(strong, i => med[i]) / (d3.sum(med) || 1);
+    items.push(`<b>Fire season: ${txt}.</b> ${MONTHS_LONG[peak]} is the peak, with about ${n1(med[peak])} fire cell-days
+      in a normal ${MONTHS_LONG[peak]}. These months hold ${Math.round(share * 100)}% of a normal year's fire.`);
+  }
+
+  // 2. the selected month
+  const mo = selected % 12, yr = 2000 + Math.floor(selected / 12), v = series.harm[selected];
+  const c = classify(v, selected, base);
+  const same = yrs.map(y => series.harm[(y - 2000) * 12 + mo]);
+  const rank = 1 + same.filter(x => x > v).length;
+  const r = c.b?.med > 0 ? v / c.b.med : null;
+  const ratio = r == null ? "" : r >= 1.15 ? `, <b>${r >= 10 ? fmt(r) : r.toFixed(1)}× a normal ${MONTHS_LONG[mo]}</b>` : r <= 0.85 ? `, ${Math.round(r * 100)}% of a normal ${MONTHS_LONG[mo]}` : `, about a normal ${MONTHS_LONG[mo]}`;
+  const verdict = {
+    record: "A <b>record</b>: even the low end of its uncertainty range is above every other " + MONTHS_LONG[mo] + " in 2003–2022.",
+    above: "<b>Clearly above normal</b>, even after allowing for uncertainty.",
+    below: "Below normal.",
+    normal: "Within the normal range: the difference is not larger than the uncertainty.",
+    na: "",
+  }[c.cls];
+  items.push(`<b>${MONTHS_LONG[mo]} ${yr}</b> (selected, shown on the map): ${n1(v)} fire cell-days${ratio}. ${verdict}
+    It ranks <b>#${rank} of ${same.length}</b> ${MONTHS_LONG[mo]}s since 2001.`);
+
+  // 3. long-term change, and what raw maps would have said
+  const mean = (a, b, f) => d3.mean(d3.range(a, b + 1), y => d3.sum(d3.range(12), k => f((y - 2000) * 12 + k)));
+  const hPre = mean(2003, 2011, m => series.harm[m]), hPost = mean(2013, 2025, m => series.harm[m]);
+  const rPre = mean(2003, 2011, m => series.raw_modis[m] + series.raw_viirs[m]), rPost = mean(2013, 2025, m => series.raw_modis[m] + series.raw_viirs[m]);
+  if (hPre > 0 && rPre > 0) {
+    const ch = hPost / hPre - 1, rr = rPost / rPre;
+    const word = Math.abs(ch) < 0.1 ? "about the same amount of fire" : ch > 0 ? `<b>${Math.round(ch * 100)}% more fire</b>` : `<b>${Math.round(-ch * 100)}% less fire</b>`;
+    const note = rr > (1 + ch) * 1.4
+      ? "Most of that “increase” comes from the sharper VIIRS satellites joining in 2012, not from more fire."
+      : "Here the satellite change makes less difference.";
+    items.push(`<b>Long-term change:</b> since 2013 this area has had ${word} per year than in 2003–2011, in one consistent unit.
+      Raw hotspot maps would say <b>×${rr.toFixed(1)}</b>. ${note}`);
+  }
+
+  // 4. worst year
+  const top = yrs.reduce((a, y) => (annual.get(y) > annual.get(a) ? y : a), yrs[0]);
+  if (typical > 0 && annual.get(top) > 0) {
+    items.push(`<b>Worst year: ${top}</b>, with ${(annual.get(top) / typical).toFixed(1)}× the fire of a typical year.
+      Click its row in the calendar to see which months burned.`);
+  }
+  $("readout").innerHTML = items.map(t => `<li>${t}</li>`).join("");
+}
+
+/** Section tabs + "more below" cue inside the scrolling result panel. */
+function wirePanel() {
+  const panel = $("panel");
+  const secs = ["secSummary", "secCal", "secSeason", "secRelay"];
+  document.querySelectorAll("#ptabs button").forEach(b => (b.onclick = () => $(b.dataset.t).scrollIntoView({ behavior: "smooth", block: "start" })));
+  const onScroll = () => {
+    let cur = secs[0];
+    for (const id of secs) if ($(id).getBoundingClientRect().top - panel.getBoundingClientRect().top < 120) cur = id;
+    document.querySelectorAll("#ptabs button").forEach(b => b.classList.toggle("on", b.dataset.t === cur));
+    updateCue();
+  };
+  panel.addEventListener("scroll", onScroll, { passive: true });
+  $("moreCue").onclick = () => panel.scrollBy({ top: panel.clientHeight * 0.8, behavior: "smooth" });
+}
+function updateCue() {
+  const p = $("panel");
+  const scrollable = p.scrollHeight - p.clientHeight > 40;
+  $("moreCue").classList.toggle("hide", !scrollable || p.scrollTop + p.clientHeight > p.scrollHeight - 80);
 }
 
 function renderValidation() {

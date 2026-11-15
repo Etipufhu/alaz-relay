@@ -156,6 +156,44 @@ export async function aggregatePolygon(ring) {
   return out;
 }
 
+/**
+ * Fire cells (0.1° squares) inside a lon/lat box, as GeoJSON for the map.
+ * month = month index -> harmonized cell-days in that month; month = null -> average cell-days per year 2003-2025.
+ * Colour position `t` uses a fixed log scale so different months and places stay comparable.
+ */
+export async function cellsInBBox(bbox, month, maxTiles = 48) {
+  const T = META.tile_cells;
+  const w = Math.max(-180, bbox[0]), e = Math.min(179.99, bbox[2]), s = Math.max(-85, bbox[1]), n = Math.min(85, bbox[3]);
+  const tx0 = Math.floor((w * 10) / T), tx1 = Math.floor((e * 10) / T);
+  const ty0 = Math.floor((s * 10) / T), ty1 = Math.floor((n * 10) / T);
+  const cap = month == null ? 40 : 20;
+  if ((tx1 - tx0 + 1) * (ty1 - ty0 + 1) > maxTiles) return { fc: { type: "FeatureCollection", features: [] }, max: cap, tooMany: true };
+  const jobs = [];
+  for (let tx = tx0; tx <= tx1; tx++) for (let ty = ty0; ty <= ty1; ty++) jobs.push(getTile(tx, ty));
+  const tiles = await Promise.all(jobs);
+  const m0 = (2003 - 2000) * 12, m1 = (2025 - 2000) * 12 + 11, nYears = 23;
+  const features = [];
+  const lc = Math.log1p(cap);
+  for (const t of tiles) {
+    if (!t) continue;
+    const nC = t.cells.length / 3, acc = new Float64Array(nC);
+    const r = t.rows;
+    for (let i = 0; i < r.length; i += 5) {
+      const m = r[i + 1];
+      if (month == null ? m >= m0 && m <= m1 : m === month) acc[r[i]] += r[i + 2] / 10;
+    }
+    for (let c = 0; c < nC; c++) {
+      const v = month == null ? acc[c] / nYears : acc[c];
+      if (v < (month == null ? 0.05 : 0.2)) continue;
+      const lat = t.cells[c * 3] / 10, lon = t.cells[c * 3 + 1] / 10;
+      if (lon + 0.1 < w || lon > e || lat + 0.1 < s || lat > n) continue;
+      features.push({ type: "Feature", properties: { v: Math.round(v * 100) / 100, t: Math.min(1, Math.log1p(v) / lc), lat: lat + 0.05, lon: lon + 0.05 },
+        geometry: { type: "Polygon", coordinates: [[[lon, lat], [lon + 0.1, lat], [lon + 0.1, lat + 0.1], [lon, lat + 0.1], [lon, lat]]] } });
+    }
+  }
+  return { fc: { type: "FeatureCollection", features }, max: cap, tooMany: false };
+}
+
 export async function countrySeries(slug) {
   const d = await getJSON(`data/countries/${slug}.json`);
   if (!d) return null;

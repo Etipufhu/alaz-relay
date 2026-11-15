@@ -126,8 +126,11 @@ def main():
     r = np.interp(v, [0, .4, .8, 1], [120, 220, 255, 255])
     gch = np.interp(v, [0, .4, .8, 1], [10, 60, 170, 240])
     b = np.interp(v, [0, .4, .8, 1], [30, 20, 40, 160])
-    a = np.where(merc > 0, np.interp(v, [0, .2, 1], [70, 170, 255]), 0)
-    Image.fromarray(np.dstack([r, gch, b, a]).astype(np.uint8), "RGBA").save(WEB / "overview.png", optimize=True)
+    a = np.where(merc > 0, np.interp(v, [0, .2, 1], [130, 200, 255]), 0)
+    img = np.dstack([r, gch, b, a]).astype(np.uint8)
+    # MapLibre does not draw a single image source spanning all 360 deg of longitude: write two halves
+    Image.fromarray(img[:, : N // 2], "RGBA").save(WEB / "overview_w.png", optimize=True)
+    Image.fromarray(img[:, N // 2:], "RGBA").save(WEB / "overview_e.png", optimize=True)
 
     # ---- metadata
     card = json.loads((H / "model_card.json").read_text())
