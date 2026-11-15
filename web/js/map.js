@@ -9,9 +9,16 @@ const CELL_ZOOM = 4.5; // from this zoom on, real 0.1° fire cells replace the o
 // colour ramp shared by the cells layer and the map legend (inferno-like, matches the calendar)
 // the zoomed-out overview picture uses the warm ramp written by export_web.py
 const OV_RAMP = ["rgba(120,10,30,.6)", "#dc3c14", "#ffaa28", "#fff0a0"];
-const RAMP = [
-  [0, "#3b0f70"], [0.15, "#8c2981"], [0.4, "#de4968"], [0.7, "#fe9f6d"], [1, "#fcfdbf"],
+// zoomed in: a smooth "glow" (GPU heatmap) built from the 10 km cells, same warm colours as the overview
+const HEAT = [
+  [0, "rgba(0,0,0,0)"], [0.04, "rgba(110,10,30,0)"], [0.12, "rgba(130,14,30,.45)"], [0.3, "rgba(196,36,16,.78)"],
+  [0.55, "#f0601a"], [0.8, "#ffae30"], [1, "#fff3b8"],
 ];
+const LEGEND_RAMP = ["rgba(130,14,30,.6)", "#c42410", "#f0601a", "#ffae30", "#fff3b8"];
+// width of one 0.1 deg cell in screen pixels at zoom z is 512 * 2^z * 0.1 / 360
+const cellPx = z => (512 * 2 ** z * 0.1) / 360;
+const SHARP_ZOOM = 8.5; // from here on the exact 10 km squares take over from the glow
+const SQUARE = [[0, "#5a0c1e"], [0.3, "#a8200f"], [0.55, "#f0601a"], [0.8, "#ffae30"], [1, "#fff3b8"]];
 
 /** Brighten CARTO dark-matter so land, water, borders and place names are readable. */
 function brighten(map) {
@@ -35,7 +42,7 @@ function brighten(map) {
 
 export function createMap(container, onArea) {
   const map = new maplibregl.Map({
-    container, style: STYLE, center: [10, 15], zoom: 1.3, attributionControl: { compact: true },
+    container, style: STYLE, center: [10, 15], zoom: 1.3, maxZoom: 11, attributionControl: { compact: true },
     dragRotate: false, pitchWithRotate: false,
   });
   map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
@@ -57,10 +64,28 @@ export function createMap(container, onArea) {
         paint: { "raster-opacity": ["interpolate", ["linear"], ["zoom"], CELL_ZOOM - 0.3, 1, CELL_ZOOM + 0.3, 0.15],
                  "raster-resampling": "nearest", "raster-fade-duration": 0 } }, firstSymbol);
     }
+    map.addSource("cellpts", { type: "geojson", data: empty() });
+    map.addLayer({ id: "heat", type: "heatmap", source: "cellpts", minzoom: CELL_ZOOM - 0.3,
+      paint: {
+        "heatmap-weight": ["get", "t"],
+        // kernel radius = 1.5 cells at every zoom, so neighbouring cells blend into one smooth surface
+        // (cells are taller than wide in Web Mercator away from the equator: s = 1/cos(lat))
+        "heatmap-radius": ["interpolate", ["exponential", 2], ["zoom"],
+          4, ["*", 1.5 * cellPx(4), ["get", "s"]], 12, ["*", 1.5 * cellPx(12), ["get", "s"]]],
+        "heatmap-intensity": 2.2,
+        "heatmap-color": ["interpolate", ["linear"], ["heatmap-density"], ...HEAT.flat()],
+        "heatmap-opacity": ["interpolate", ["linear"], ["zoom"], CELL_ZOOM - 0.3, 0, CELL_ZOOM + 0.2, 0.95,
+          SHARP_ZOOM - 0.5, 0.95, SHARP_ZOOM + 0.5, 0.3],
+      } }, firstSymbol);
+    // the real 10 km squares: invisible under the glow (but hoverable), crisp when zoomed in close
     map.addSource("cells", { type: "geojson", data: empty() });
     map.addLayer({ id: "cells", type: "fill", source: "cells", minzoom: CELL_ZOOM - 0.3,
-      paint: { "fill-color": ["interpolate", ["linear"], ["get", "t"], ...RAMP.flat()],
-               "fill-opacity": ["interpolate", ["linear"], ["zoom"], CELL_ZOOM - 0.3, 0, CELL_ZOOM + 0.2, 0.9] } }, firstSymbol);
+      paint: { "fill-color": ["interpolate", ["linear"], ["get", "t"], ...SQUARE.flat()],
+               "fill-outline-color": "rgba(20,22,27,.55)",
+               "fill-opacity": ["interpolate", ["linear"], ["zoom"], SHARP_ZOOM - 0.5, 0, SHARP_ZOOM + 0.5, 0.85] } }, firstSymbol);
+    map.addSource("hovercell", { type: "geojson", data: empty() });
+    map.addLayer({ id: "hovercell", type: "line", source: "hovercell",
+      paint: { "line-color": "#fff3b8", "line-width": 1.5 } });
     map.addSource("aoi", { type: "geojson", data: empty() });
     map.addLayer({ id: "aoi-fill", type: "fill", source: "aoi", paint: { "fill-color": "#ffb25c", "fill-opacity": 0.05 } });
     map.addLayer({ id: "aoi-line", type: "line", source: "aoi", paint: { "line-color": "#ffc163", "line-width": 2.2 } });
@@ -81,6 +106,8 @@ export function createMap(container, onArea) {
     if (id !== reqId) return; // a newer request superseded this one
     lastInfo = res;
     map.getSource("cells").setData(res ? res.fc : empty());
+    map.getSource("cellpts").setData(res ? { type: "FeatureCollection", features: res.fc.features.map(f => ({
+      type: "Feature", properties: { t: f.properties.t, s: 1 / Math.cos((f.properties.lat * Math.PI) / 180) }, geometry: { type: "Point", coordinates: [f.properties.lon, f.properties.lat] } })) } : empty());
     renderLegend();
   }
   let t = null;
@@ -94,9 +121,9 @@ export function createMap(container, onArea) {
     const unit = view.mode === "month" && !zoomedOut ? "fire cell-days in the month" : "fire cell-days per year";
     legend.innerHTML = `
       <div class="ml-title">Fires on the map: <b>${what}</b></div>
-      <div class="ml-ramp"><span>low</span><i style="background:linear-gradient(90deg,${(zoomedOut ? OV_RAMP : RAMP.map(r => r[1])).join(",")})"></i><span>${max ? `${max}+` : "high"}</span></div>
-      <div class="ml-note">${zoomedOut ? "Zoom in to see each 10 km square" : `${unit} per 10 km square`}${lastInfo?.tooMany ? " · zoom in further for detail" : ""}</div>
-      ${monthTxt ? `<div class="ml-seg"><button data-m="month" class="${view.mode === "month" ? "on" : ""}">${monthTxt}</button><button data-m="avg" class="${view.mode === "avg" ? "on" : ""}">Average year</button></div>` : ""}`;
+      <div class="ml-ramp"><span>low</span><i style="background:linear-gradient(90deg,${(zoomedOut ? OV_RAMP : LEGEND_RAMP).join(",")})"></i><span>${max ? `${max}+` : "high"}</span></div>
+      <div class="ml-note">${zoomedOut ? (monthTxt ? `<b>Zoom in</b> to see the fires of ${monthTxt}` : "Zoom in to see each 10 km square") : `${unit} per 10 km square · ${map.getZoom() < SHARP_ZOOM ? "zoom in for exact squares" : "hover for values"}`}${lastInfo?.tooMany ? " · zoom in further for detail" : ""}</div>
+      ${monthTxt && !zoomedOut ? `<div class="ml-seg"><button data-m="month" class="${view.mode === "month" ? "on" : ""}">${monthTxt}</button><button data-m="avg" class="${view.mode === "avg" ? "on" : ""}">Average year</button></div>` : ""}`;
     legend.querySelectorAll("button").forEach(btn => (btn.onclick = () => { view.mode = btn.dataset.m; refreshCells(); renderLegend(); }));
   }
   renderLegend();
@@ -106,11 +133,12 @@ export function createMap(container, onArea) {
   map.on("mousemove", "cells", e => {
     const f = e.features?.[0];
     if (!f || tool) return;
+    map.getSource("hovercell")?.setData({ type: "FeatureCollection", features: [f.toJSON ? f.toJSON() : { type: "Feature", geometry: f.geometry, properties: {} }] });
     const v = f.properties.v;
     const when = view.mode === "month" && view.month != null ? `in ${MONTHS[view.month % 12]} ${2000 + Math.floor(view.month / 12)}` : "per year, on average (2003–2025)";
     pop.setLngLat(e.lngLat).setHTML(`<b>${v < 10 ? v.toFixed(1) : Math.round(v)}</b> fire cell-days ${when}<br><span>10 km square at ${f.properties.lat.toFixed(1)}°, ${f.properties.lon.toFixed(1)}°</span>`).addTo(map);
   });
-  map.on("mouseleave", "cells", () => pop.remove());
+  map.on("mouseleave", "cells", () => { pop.remove(); map.getSource("hovercell")?.setData(empty()); });
 
   // ---- drawing state
   let tool = null, start = null, verts = [];

@@ -15,6 +15,11 @@ const STORIES = [
 ];
 
 let MAP = null;
+// countries with land on both sides of the 180° meridian: fit to the main landmass instead of the whole world
+const FIT_FIX = { "russian-federation": [19.6, 41.2, 190, 78], "united-states": [-170, 18.5, -66, 71.5],
+                  "fiji": [176.8, -19.3, 181, -15.9], "new-zealand": [166, -47.4, 178.7, -34.3], "kiribati": [172.5, -3, 177.2, 3.5] };
+// only the newest area request may fill the panel (a slow earlier one must not overwrite it)
+let reqSeq = 0;
 const state = { series: null, name: "", mode: "harm", selected: null, base: null, baseYears: [2003, 2022] };
 
 function rectRing(w, s, e, n) { return [[w, s], [e, s], [e, n], [w, n], [w, s]]; }
@@ -43,7 +48,7 @@ async function init() {
     if (!Number.isFinite(lat) || !Number.isFinite(lon) || $("inLat").value === "" || $("inLon").value === "") return;
     selectArea({ ring: circleRing(lat, lon, km), name: `${km} km around ${lat.toFixed(2)}, ${lon.toFixed(2)}` }, mapApi);
   };
-  $("toolClear").onclick = () => { mapApi.clearArea(); mapApi.setMonth(null); $("results").hidden = true; $("emptyState").hidden = false; };
+  $("toolClear").onclick = () => { reqSeq++; $("countrySel").value = ""; mapApi.clearArea(); mapApi.setMonth(null); $("results").hidden = true; $("emptyState").hidden = false; };
 
   document.querySelectorAll(".seg button").forEach(b => (b.onclick = () => {
     document.querySelectorAll(".seg button").forEach(x => x.classList.toggle("on", x === b));
@@ -66,8 +71,10 @@ async function openCountry(slug, month, mapApi) {
   if (!c) return;
   $("countrySel").value = slug;
   mapApi.clearArea();
-  mapApi.fit(c.bbox);
+  mapApi.fit(FIT_FIX[c.slug] ?? c.bbox);
+  const id = ++reqSeq;
   const s = await countrySeries(c.slug);
+  if (id !== reqSeq || !s) return;
   show(s, c.name, `Country total · ${fmt(c.total)} harmonized fire cell-days since 2000`, month);
 }
 
@@ -143,20 +150,32 @@ async function selectArea(area, mapApi) {
   mapApi.showArea(area.ring);
   mapApi.fit(bboxOf(area.ring));
   $("countrySel").value = "";
+  const id = ++reqSeq;
   try {
     const s = await aggregatePolygon(area.ring);
+    if (id !== reqSeq) return;
     const where = s.countries?.length ? ` · ${s.countries.slice(0, 3).join(", ")}` : "";
     show(s, area.name, `${fmt(areaKm2(area.ring))} km² · ${fmt(s.cells)} grid cells (0.1°)${where}`, area.month ? mIndex(area.month) : null);
   } catch (err) {
-    alert(err.message);
+    if (id === reqSeq) toast(err.message);
   }
+}
+
+/** Short message over the map (instead of a blocking browser alert). */
+function toast(msg) {
+  let t = document.querySelector(".toast");
+  if (!t) { t = Object.assign(document.createElement("div"), { className: "toast", role: "status" }); $("map").append(t); }
+  t.textContent = msg;
+  t.classList.add("on");
+  clearTimeout(toast.h);
+  toast.h = setTimeout(() => t.classList.remove("on"), 4500);
 }
 
 function show(series, name, sub, month = null) {
   state.series = series;
   state.name = name;
   state.base = baseline(series, ...state.baseYears);
-  state.selected = month ?? defaultMonth(series);
+  state.selected = month ?? defaultMonth(series, state.base);
   $("aoiName").textContent = name;
   $("aoiSub").textContent = sub;
   $("emptyState").hidden = true;
@@ -166,8 +185,11 @@ function show(series, name, sub, month = null) {
   drawTimeline($("timeline"));
 }
 
-function defaultMonth(series) {
-  // most recent month with notable activity, else the last month
+function defaultMonth(series, base) {
+  // the latest peak-season month (e.g. July 2025 for Canada), so the map opens on something worth seeing
+  const peak = d3.maxIndex(base, b => b.med || 0);
+  if (base[peak]?.med > 0) for (let m = META.last_month; m >= META.last_month - 23; m--) if (m % 12 === peak && series.harm[m] > 0) return m;
+  // otherwise the most recent month with activity, else the last month
   for (let m = META.last_month; m >= META.last_month - 11; m--) if (series.harm[m] > 0) return m;
   return META.last_month;
 }
@@ -220,6 +242,7 @@ function renderCards() {
   $("cards").innerHTML = cards.map(x => `<div class="card ${x.cls || ""}"><div class="k">${x.k}</div><div class="v">${x.v}</div><div class="d">${x.d}</div></div>`).join("");
 }
 
+const MONTHS_PLURAL = ["Januaries", "Februaries", "Marches", "Aprils", "Mays", "Junes", "Julys", "Augusts", "Septembers", "Octobers", "Novembers", "Decembers"];
 const MONTHS_LONG = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
 /** Plain-language reading of the selected area: season, the selected month, long-term change, worst year. */
@@ -260,8 +283,8 @@ function renderReadout() {
     normal: "Within the normal range: the difference is not larger than the uncertainty.",
     na: "",
   }[c.cls];
-  items.push(`<b>${MONTHS_LONG[mo]} ${yr}</b> (selected, shown on the map): ${n1(v)} fire cell-days${ratio}. ${verdict}
-    It ranks <b>#${rank} of ${same.length}</b> ${MONTHS_LONG[mo]}s since 2001.`);
+  items.push(`<b>${MONTHS_LONG[mo]} ${yr}</b> (selected; zoom the map in to see where it burned): ${n1(v)} fire cell-days${ratio}. ${verdict}
+    It ranks <b>#${rank} of ${same.length}</b> ${MONTHS_PLURAL[mo]} since 2001.`);
 
   // 3. long-term change, and what raw maps would have said
   const mean = (a, b, f) => d3.mean(d3.range(a, b + 1), y => d3.sum(d3.range(12), k => f((y - 2000) * 12 + k)));
