@@ -24,8 +24,8 @@ function build(svg) {
     .forEach(([o, c, a]) => el("stop", { offset: o, "stop-color": c, "stop-opacity": a }, fireG));
   const g = el("g", { class: "fx" }, svg);
   for (const [x, y, s] of PTS[key].fire) {
-    el("circle", { class: "fire", cx: (x / 100) * W, cy: (y / 100) * H, r: 6 + s * 5, fill: `url(#fire-${key})`,
-      style: `--t:${(1.4 + r() * 2.2).toFixed(2)}s;--d:-${(r() * 4).toFixed(2)}s` }, g);
+    el("circle", { class: "fire", cx: (x / 100) * W, cy: (y / 100) * H, r: 4 + s * 3, fill: `url(#fire-${key})`,
+      style: `--t:${(2.2 + r() * 2.6).toFixed(2)}s;--d:-${(r() * 4).toFixed(2)}s` }, g);
   }
   // measured stars, plus a few more scattered in empty sky
   const stars = [...PTS[key].star];
